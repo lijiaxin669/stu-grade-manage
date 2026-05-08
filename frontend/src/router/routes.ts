@@ -51,54 +51,57 @@ export const adminRoutes: RouteRecordRaw[] = [
 		component: AdminLayout,
 		redirect: '/admin/overview',
 		meta: { roles: ['ROLE_SUPER_ADMIN'], title: '成绩管理后台' },
-			children: [
-				{
-					path: 'overview',
-					name: 'AdminOverview',
-				// Reuse Dashboard component or create new one?
-				// User asked for "Admin Overview" page separately.
-				// I'll point to the new component I'm about to create.
+		children: [
+			{
+				path: 'overview',
+				name: 'AdminOverview',
 				component: () => import('@/views/admin/overview/index.vue'),
 				meta: { title: '系统概览', icon: 'dashboard', permissions: ['MENU_ADMIN_OVERVIEW'] },
-				},
-				{
-					path: 'users',
-					name: 'UserManage',
-					component: () => import('@/views/admin/user/index.vue'),
-					meta: { title: '用户管理', permissions: ['MENU_ADMIN_USERS'] },
-				},
-				{
-					path: 'roles',
-					name: 'RoleManage',
-					component: () => import('@/views/admin/role/index.vue'),
-					meta: { title: '权限管理', permissions: ['MENU_ADMIN_ROLES'], hidden: true },
-				},
-				{
-					path: 'courses',
+			},
+			{
+				path: 'users',
+				name: 'UserManage',
+				component: () => import('@/views/admin/user/index.vue'),
+				meta: { title: '用户管理', permissions: ['MENU_ADMIN_USERS'] },
+			},
+			{
+				path: 'roles',
+				name: 'RoleManage',
+				component: () => import('@/views/admin/role/index.vue'),
+				meta: { title: '权限管理', permissions: ['MENU_ADMIN_ROLES'], hidden: true },
+			},
+			{
+				path: 'courses',
 				name: 'CourseManage',
 				component: () => import('@/views/admin/course/index.vue'),
 				meta: { title: '课程管理', permissions: ['MENU_ADMIN_COURSES'] },
 			},
-				{
-					path: 'roster',
-					name: 'AdminRoster',
-					component: () => import('@/views/admin/roster/index.vue'),
-					meta: { title: '课程名单', permissions: ['MENU_ADMIN_ROSTER'] },
-				},
-				{
-					path: 'stats',
-					name: 'AdminStats',
-					component: () => import('@/views/teacher/stats/index.vue'),
-					meta: { title: '成绩统计', permissions: ['MENU_ADMIN_STATS'] },
-				},
-				{
-					path: 'export',
-					name: 'AdminExport',
-					component: () => import('@/views/teacher/export/index.vue'),
-					meta: { title: '成绩导出', permissions: ['MENU_ADMIN_EXPORT'] },
-				},
-			],
-		},
+			{
+				path: 'roster',
+				name: 'AdminRoster',
+				component: () => import('@/views/admin/roster/index.vue'),
+				meta: { title: '课程名单', permissions: ['MENU_ADMIN_ROSTER'] },
+			},
+			{
+				path: 'appeals',
+				name: 'AdminAppeal',
+				component: () => import('@/views/admin/appeal/index.vue'),
+				meta: { title: '申诉仲裁', permissions: ['MENU_ADMIN_APPEAL'] },
+			},
+			{
+				path: 'stats',
+				name: 'AdminStats',
+				component: () => import('@/views/teacher/stats/index.vue'),
+				meta: { title: '成绩统计', permissions: ['MENU_ADMIN_STATS'] },
+			},
+			{
+				path: 'export',
+				name: 'AdminExport',
+				component: () => import('@/views/teacher/export/index.vue'),
+				meta: { title: '成绩导出', permissions: ['MENU_ADMIN_EXPORT'] },
+			},
+		],
+	},
 ]
 
 export const teacherRoutes: RouteRecordRaw[] = [
@@ -128,6 +131,12 @@ export const teacherRoutes: RouteRecordRaw[] = [
 				meta: { title: '成绩录入', icon: 'edit', permissions: ['MENU_TEACHER_GRADES'] },
 			},
 			{
+				path: 'appeals',
+				name: 'TeacherAppeal',
+				component: () => import('@/views/teacher/appeal/index.vue'),
+				meta: { title: '申诉处理', icon: 'exclamation-circle', permissions: ['MENU_TEACHER_APPEAL'] },
+			},
+			{
 				path: 'stats',
 				name: 'TeacherStats',
 				component: () => import('@/views/teacher/stats/index.vue'),
@@ -151,25 +160,31 @@ export const studentRoutes: RouteRecordRaw[] = [
 		component: UserLayout,
 		redirect: '/student/overview',
 		meta: { roles: ['ROLE_STUDENT'], title: 'Student Center' },
-			children: [
-				{
-					path: 'overview',
-					name: 'StudentOverview',
-					component: () => import('@/views/student/overview/index.vue'),
-					meta: { title: '我的首页', permissions: ['MENU_STUDENT_OVERVIEW'] },
-				},
-				{
-					path: 'my-grades',
-					name: 'StudentGrades',
-					component: () => import('@/views/student/grade/index.vue'),
-					meta: { title: '我的成绩', permissions: ['MENU_STUDENT_GRADES'] },
-				},
-				{
-					path: 'courses',
-					name: 'StudentCourses',
-					component: () => import('@/views/student/course/index.vue'),
-					meta: { title: '课程信息', permissions: ['MENU_STUDENT_COURSES'] },
-				},
+		children: [
+			{
+				path: 'overview',
+				name: 'StudentOverview',
+				component: () => import('@/views/student/overview/index.vue'),
+				meta: { title: '我的首页', permissions: ['MENU_STUDENT_OVERVIEW'] },
+			},
+			{
+				path: 'my-grades',
+				name: 'StudentGrades',
+				component: () => import('@/views/student/grade/index.vue'),
+				meta: { title: '我的成绩', permissions: ['MENU_STUDENT_GRADES'] },
+			},
+			{
+				path: 'appeals',
+				name: 'StudentAppeal',
+				component: () => import('@/views/student/appeal/index.vue'),
+				meta: { title: '我的申诉', permissions: ['MENU_STUDENT_APPEAL'] },
+			},
+			{
+				path: 'courses',
+				name: 'StudentCourses',
+				component: () => import('@/views/student/course/index.vue'),
+				meta: { title: '课程信息', permissions: ['MENU_STUDENT_COURSES'] },
+			},
 			{
 				path: 'profile',
 				name: 'StudentProfile',
