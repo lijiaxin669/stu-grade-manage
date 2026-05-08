@@ -12,11 +12,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Set;
 
 @SpringBootApplication
+@EnableScheduling
 public class GradeApplication {
 
     public static void main(String[] args) {
@@ -87,6 +89,25 @@ public class GradeApplication {
             Permission apiGradeExport = ensurePerm(permissionRepository, "API_GRADE_EXPORT", "Export Grades", "API");
             allPerms.addAll(java.util.List.of(apiGradeList, apiGradeCreate, apiGradeUpdate, apiGradeDelete, apiGradeStats, apiGradeExport));
 
+            // MENU - appeal
+            Permission menuStudentAppeal = ensurePerm(permissionRepository, "MENU_STUDENT_APPEAL", "Student Appeal", "MENU");
+            Permission menuTeacherAppeal = ensurePerm(permissionRepository, "MENU_TEACHER_APPEAL", "Teacher Appeal", "MENU");
+            Permission menuAdminAppeal = ensurePerm(permissionRepository, "MENU_ADMIN_APPEAL", "Admin Appeal", "MENU");
+            allPerms.addAll(java.util.List.of(menuStudentAppeal, menuTeacherAppeal, menuAdminAppeal));
+
+            // API - appeal
+            Permission apiAppealCreate = ensurePerm(permissionRepository, "API_APPEAL_CREATE", "Create Appeal", "API");
+            Permission apiAppealMine = ensurePerm(permissionRepository, "API_APPEAL_MINE", "My Appeals", "API");
+            Permission apiAppealPending = ensurePerm(permissionRepository, "API_APPEAL_PENDING", "Pending Appeals", "API");
+            Permission apiAppealClaim = ensurePerm(permissionRepository, "API_APPEAL_CLAIM", "Claim Appeal", "API");
+            Permission apiAppealDecision = ensurePerm(permissionRepository, "API_APPEAL_DECISION", "Decide Appeal", "API");
+            Permission apiAppealArbitrateRequest = ensurePerm(permissionRepository, "API_APPEAL_ARBITRATE_REQUEST", "Request Arbitration", "API");
+            Permission apiAppealArbitrating = ensurePerm(permissionRepository, "API_APPEAL_ARBITRATING", "Arbitrating Appeals", "API");
+            Permission apiAppealArbitrate = ensurePerm(permissionRepository, "API_APPEAL_ARBITRATE", "Arbitrate Appeal", "API");
+            Permission apiAppealDetail = ensurePerm(permissionRepository, "API_APPEAL_DETAIL", "Appeal Detail", "API");
+            Permission apiAppealAuditLogs = ensurePerm(permissionRepository, "API_APPEAL_AUDIT_LOGS", "Appeal Audit Logs", "API");
+            allPerms.addAll(java.util.List.of(apiAppealCreate, apiAppealMine, apiAppealPending, apiAppealClaim, apiAppealDecision, apiAppealArbitrateRequest, apiAppealArbitrating, apiAppealArbitrate, apiAppealDetail, apiAppealAuditLogs));
+
             // Assign default permissions to roles:
             // - SUPER_ADMIN always has all permissions (merge, do not wipe custom)
             superAdminRole.getPermissions().addAll(allPerms);
@@ -103,9 +124,11 @@ public class GradeApplication {
                 permissionRepository.findByCode("MENU_TEACHER_GRADES").orElseThrow(),
                 permissionRepository.findByCode("MENU_TEACHER_STATS").orElseThrow(),
                 permissionRepository.findByCode("MENU_TEACHER_EXPORT").orElseThrow(),
+                menuTeacherAppeal,
                 apiCourseList, apiCourseCreate, apiCourseUpdate, apiCourseDelete,
                 apiGradeList, apiGradeCreate, apiGradeUpdate, apiGradeDelete, apiGradeStats, apiGradeExport,
-                apiEnrollList
+                apiEnrollList,
+                apiAppealPending, apiAppealClaim, apiAppealDecision, apiAppealDetail, apiAppealAuditLogs
             )));
 
             if (studentRole.getPermissions().isEmpty()) studentRole.setPermissions(new java.util.HashSet<>(java.util.List.of(
@@ -113,8 +136,10 @@ public class GradeApplication {
                 permissionRepository.findByCode("MENU_STUDENT_COURSES").orElseThrow(),
                 permissionRepository.findByCode("MENU_STUDENT_GRADES").orElseThrow(),
                 permissionRepository.findByCode("MENU_STUDENT_PROFILE").orElseThrow(),
+                menuStudentAppeal,
                 apiCourseList,
-                apiGradeList
+                apiGradeList,
+                apiAppealCreate, apiAppealMine, apiAppealArbitrateRequest, apiAppealDetail, apiAppealAuditLogs
             )));
 
             java.util.List<Role> rolesToSave = new java.util.ArrayList<>();

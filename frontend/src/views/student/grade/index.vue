@@ -39,6 +39,7 @@
 						<th>绩点</th>
 						<th>状态</th>
 						<th>录入时间</th>
+						<th>操作</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -59,12 +60,44 @@
 							</span>
 						</td>
 						<td class="time">{{ formatDate(g.gradedAt) }}</td>
+						<td>
+							<button class="btn-link" @click="openAppealModal(g)">申诉</button>
+						</td>
 					</tr>
 					<tr v-if="filteredGrades.length === 0">
-						<td colspan="7" class="empty-text">暂无成绩记录</td>
+						<td colspan="8" class="empty-text">暂无成绩记录</td>
 					</tr>
 				</tbody>
 			</table>
+		</div>
+
+		<div v-if="showAppealModal" class="modal-mask">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>成绩申诉 - {{ appealTarget?.courseName }}</h3>
+					<span class="close-btn" @click="showAppealModal = false">&times;</span>
+				</div>
+				<form @submit.prevent="submitAppeal">
+					<div class="modal-body">
+						<div class="form-group">
+							<label>当前分数</label>
+							<input :value="appealTarget?.score" disabled />
+						</div>
+						<div class="form-group">
+							<label>期望分数 (0-100) <span class="required">*</span></label>
+							<input type="number" v-model.number="appealForm.expectedScore" min="0" max="100" step="0.5" required />
+						</div>
+						<div class="form-group">
+							<label>申诉理由 (10-500字) <span class="required">*</span></label>
+							<textarea v-model="appealForm.reason" rows="4" required minlength="10" maxlength="500"></textarea>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" @click="showAppealModal = false">取消</button>
+						<button type="submit" class="btn btn-primary" :disabled="appealSubmitting">提交申诉</button>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
 </template>
@@ -72,9 +105,15 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { getGrades } from '@/api/grade'
+import { createAppeal } from '@/api/appeal'
 import { formatSemester } from '@/utils/semester'
+import Toast from '@/utils/toast'
 
 const rawGrades = ref<any[]>([])
+const showAppealModal = ref(false)
+const appealSubmitting = ref(false)
+const appealTarget = ref<any>(null)
+const appealForm = reactive({ expectedScore: 0, reason: '' })
 
 const filters = reactive({
 	semester: '',
@@ -132,6 +171,31 @@ const calculateGPA = (rawScore: any) => {
 const formatDate = (str: string) => {
 	if (!str) return '-'
 	return new Date(str).toLocaleDateString()
+}
+
+const openAppealModal = (g: any) => {
+	appealTarget.value = g
+	appealForm.expectedScore = 0
+	appealForm.reason = ''
+	showAppealModal.value = true
+}
+
+const submitAppeal = async () => {
+	if (!appealTarget.value) return
+	appealSubmitting.value = true
+	try {
+		await createAppeal({
+			gradeId: appealTarget.value.id,
+			expectedScore: appealForm.expectedScore,
+			reason: appealForm.reason,
+		})
+		showAppealModal.value = false
+		Toast.success('申诉已提交')
+	} catch (e) {
+		console.error(e)
+	} finally {
+		appealSubmitting.value = false
+	}
 }
 </script>
 
@@ -327,5 +391,135 @@ tbody tr:last-child td {
 		opacity: 1;
 		transform: translateY(0);
 	}
+}
+
+.btn-link {
+	background: none;
+	border: none;
+	color: #1890ff;
+	cursor: pointer;
+	padding: 0 5px;
+	font-size: 14px;
+}
+
+.btn-link:hover {
+	text-decoration: underline;
+}
+
+.modal-mask {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.modal-content {
+	background: white;
+	width: 450px;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	animation: slideDown 0.3s ease;
+}
+
+.modal-header {
+	padding: 16px 20px;
+	border-bottom: 1px solid #f0f0f0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.modal-header h3 {
+	margin: 0;
+	font-size: 18px;
+	color: #303133;
+}
+
+.close-btn {
+	cursor: pointer;
+	font-size: 20px;
+	color: #909399;
+}
+
+.modal-body {
+	padding: 20px;
+}
+
+.modal-footer {
+	padding: 16px 20px;
+	border-top: 1px solid #f0f0f0;
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.form-group {
+	margin-bottom: 16px;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 8px;
+	color: #606266;
+	font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #dcdfe6;
+	border-radius: 4px;
+	box-sizing: border-box;
+	font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+	border-color: #409eff;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.form-group textarea {
+	resize: vertical;
+}
+
+.required {
+	color: #ff4d4f;
+}
+
+.btn {
+	padding: 8px 20px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.btn-primary {
+	background: #1890ff;
+	color: white;
+}
+
+.btn-primary:hover {
+	background: #40a9ff;
+}
+
+.btn-default {
+	background: #fff;
+	border: 1px solid #dcdfe6;
+	color: #606266;
+}
+
+@keyframes slideDown {
+	from { opacity: 0; transform: translateY(-20px); }
+	to { opacity: 1; transform: translateY(0); }
 }
 </style>

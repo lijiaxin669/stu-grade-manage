@@ -97,6 +97,12 @@ export const adminRoutes: RouteRecordRaw[] = [
 					component: () => import('@/views/teacher/export/index.vue'),
 					meta: { title: '成绩导出', permissions: ['MENU_ADMIN_EXPORT'] },
 				},
+				{
+					path: 'appeals',
+					name: 'AdminAppeals',
+					component: () => import('@/views/admin/appeal/index.vue'),
+					meta: { title: '申诉仲裁', icon: 'audit', permissions: ['MENU_ADMIN_APPEAL'] },
+				},
 			],
 		},
 ]
@@ -139,6 +145,12 @@ export const teacherRoutes: RouteRecordRaw[] = [
 				component: () => import('@/views/teacher/export/index.vue'),
 				meta: { title: '成绩导出', icon: 'export', permissions: ['MENU_TEACHER_EXPORT'] },
 			},
+			{
+				path: 'appeals',
+				name: 'TeacherAppeals',
+				component: () => import('@/views/teacher/appeal/index.vue'),
+				meta: { title: '申诉处理', icon: 'audit', permissions: ['MENU_TEACHER_APPEAL'] },
+			},
 		],
 	},
 ]
@@ -175,6 +187,12 @@ export const studentRoutes: RouteRecordRaw[] = [
 				name: 'StudentProfile',
 				component: () => import('@/views/student/profile/index.vue'),
 				meta: { title: '个人信息', permissions: ['MENU_STUDENT_PROFILE'] },
+			},
+			{
+				path: 'appeals',
+				name: 'StudentAppeals',
+				component: () => import('@/views/student/appeal/index.vue'),
+				meta: { title: '我的申诉', permissions: ['MENU_STUDENT_APPEAL'] },
 			},
 		],
 	},
