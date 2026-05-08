@@ -12,10 +12,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Set;
 
+@EnableScheduling
 @SpringBootApplication
 public class GradeApplication {
 
@@ -25,20 +27,17 @@ public class GradeApplication {
 
     @Bean
     @Order(1)
-    public CommandLineRunner initData(RoleRepository roleRepository, 
+    public CommandLineRunner initData(RoleRepository roleRepository,
                                       PermissionRepository permissionRepository,
                                       UserRepository userRepository,
                                       PasswordEncoder passwordEncoder) {
         return args -> {
-            // Init Roles (ensure exist)
             Role superAdminRole = ensureRole(roleRepository, "ROLE_SUPER_ADMIN", "Super Admin");
             Role teacherRole = ensureRole(roleRepository, "ROLE_TEACHER", "Teacher");
             Role studentRole = ensureRole(roleRepository, "ROLE_STUDENT", "Student");
 
-            // Init Permissions (MENU + API)
             java.util.List<Permission> allPerms = new java.util.ArrayList<>();
 
-            // MENU
             allPerms.add(ensurePerm(permissionRepository, "MENU_ADMIN_OVERVIEW", "Admin Overview", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_ADMIN_USERS", "User Manage", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_ADMIN_ROLES", "Role Permission Manage", "MENU"));
@@ -46,17 +45,24 @@ public class GradeApplication {
             allPerms.add(ensurePerm(permissionRepository, "MENU_ADMIN_ROSTER", "Course Roster Manage", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_ADMIN_STATS", "Admin Grade Stats", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_ADMIN_EXPORT", "Admin Grade Export", "MENU"));
+            Permission menuAdminAppeal = ensurePerm(permissionRepository, "MENU_ADMIN_APPEAL", "Admin Appeal Arbitration", "MENU");
+            allPerms.add(menuAdminAppeal);
+
             allPerms.add(ensurePerm(permissionRepository, "MENU_TEACHER_OVERVIEW", "Teacher Overview", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_TEACHER_COURSES", "Teacher Courses", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_TEACHER_GRADES", "Teacher Grades", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_TEACHER_STATS", "Teacher Stats", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_TEACHER_EXPORT", "Teacher Export", "MENU"));
+            Permission menuTeacherAppeal = ensurePerm(permissionRepository, "MENU_TEACHER_APPEAL", "Teacher Appeal Handle", "MENU");
+            allPerms.add(menuTeacherAppeal);
+
             allPerms.add(ensurePerm(permissionRepository, "MENU_STUDENT_OVERVIEW", "Student Overview", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_STUDENT_COURSES", "Student Courses", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_STUDENT_GRADES", "Student Grades", "MENU"));
             allPerms.add(ensurePerm(permissionRepository, "MENU_STUDENT_PROFILE", "Student Profile", "MENU"));
+            Permission menuStudentAppeal = ensurePerm(permissionRepository, "MENU_STUDENT_APPEAL", "Student Appeal", "MENU");
+            allPerms.add(menuStudentAppeal);
 
-            // API - user
             Permission apiUserList = ensurePerm(permissionRepository, "API_USER_LIST", "List Users", "API");
             Permission apiUserCreate = ensurePerm(permissionRepository, "API_USER_CREATE", "Create Users", "API");
             Permission apiUserReset = ensurePerm(permissionRepository, "API_USER_PASSWORD_RESET", "Reset User Password", "API");
@@ -65,20 +71,17 @@ public class GradeApplication {
             Permission apiUserUpdate = ensurePerm(permissionRepository, "API_USER_UPDATE", "Update Users", "API");
             allPerms.addAll(java.util.List.of(apiUserList, apiUserCreate, apiUserReset, apiUserStatus, apiUserDelete, apiUserUpdate));
 
-            // API - course
             Permission apiCourseList = ensurePerm(permissionRepository, "API_COURSE_LIST", "List Courses", "API");
             Permission apiCourseCreate = ensurePerm(permissionRepository, "API_COURSE_CREATE", "Create Course", "API");
             Permission apiCourseUpdate = ensurePerm(permissionRepository, "API_COURSE_UPDATE", "Update Course", "API");
             Permission apiCourseDelete = ensurePerm(permissionRepository, "API_COURSE_DELETE", "Delete Course", "API");
             allPerms.addAll(java.util.List.of(apiCourseList, apiCourseCreate, apiCourseUpdate, apiCourseDelete));
 
-            // API - roster
             Permission apiEnrollList = ensurePerm(permissionRepository, "API_ENROLL_LIST", "List Course Roster", "API");
             Permission apiEnrollAdd = ensurePerm(permissionRepository, "API_ENROLL_ADD", "Add Student To Course", "API");
             Permission apiEnrollRemove = ensurePerm(permissionRepository, "API_ENROLL_REMOVE", "Remove Student From Course", "API");
             allPerms.addAll(java.util.List.of(apiEnrollList, apiEnrollAdd, apiEnrollRemove));
 
-            // API - grade
             Permission apiGradeList = ensurePerm(permissionRepository, "API_GRADE_LIST", "List Grades", "API");
             Permission apiGradeCreate = ensurePerm(permissionRepository, "API_GRADE_CREATE", "Create Grade", "API");
             Permission apiGradeUpdate = ensurePerm(permissionRepository, "API_GRADE_UPDATE", "Update Grade", "API");
@@ -87,34 +90,52 @@ public class GradeApplication {
             Permission apiGradeExport = ensurePerm(permissionRepository, "API_GRADE_EXPORT", "Export Grades", "API");
             allPerms.addAll(java.util.List.of(apiGradeList, apiGradeCreate, apiGradeUpdate, apiGradeDelete, apiGradeStats, apiGradeExport));
 
-            // Assign default permissions to roles:
-            // - SUPER_ADMIN always has all permissions (merge, do not wipe custom)
+            Permission apiAppealCreate = ensurePerm(permissionRepository, "API_APPEAL_CREATE", "Create Appeal", "API");
+            Permission apiAppealListMine = ensurePerm(permissionRepository, "API_APPEAL_LIST_MINE", "List My Appeals", "API");
+            Permission apiAppealListPending = ensurePerm(permissionRepository, "API_APPEAL_LIST_PENDING", "List Pending Appeals", "API");
+            Permission apiAppealClaim = ensurePerm(permissionRepository, "API_APPEAL_CLAIM", "Claim Appeal", "API");
+            Permission apiAppealDecide = ensurePerm(permissionRepository, "API_APPEAL_DECIDE", "Decide Appeal", "API");
+            Permission apiAppealRequestArbitrate = ensurePerm(permissionRepository, "API_APPEAL_REQUEST_ARBITRATE", "Request Arbitration", "API");
+            Permission apiAppealListArbitrating = ensurePerm(permissionRepository, "API_APPEAL_LIST_ARBITRATING", "List Arbitrating Appeals", "API");
+            Permission apiAppealArbitrate = ensurePerm(permissionRepository, "API_APPEAL_ARBITRATE", "Arbitrate Appeal", "API");
+            Permission apiAppealDetail = ensurePerm(permissionRepository, "API_APPEAL_DETAIL", "View Appeal Detail", "API");
+            Permission apiAppealAuditLogs = ensurePerm(permissionRepository, "API_APPEAL_AUDIT_LOGS", "View Appeal Audit Logs", "API");
+            allPerms.addAll(java.util.List.of(
+                    apiAppealCreate, apiAppealListMine, apiAppealListPending,
+                    apiAppealClaim, apiAppealDecide, apiAppealRequestArbitrate,
+                    apiAppealListArbitrating, apiAppealArbitrate,
+                    apiAppealDetail, apiAppealAuditLogs
+            ));
+
             superAdminRole.getPermissions().addAll(allPerms);
 
-            // Backward-compat: if an old ROLE_ADMIN exists in DB, merge it into SUPER_ADMIN by granting all permissions.
             Role legacyAdminRole = roleRepository.findByCode("ROLE_ADMIN").orElse(null);
             if (legacyAdminRole != null) {
                 legacyAdminRole.getPermissions().addAll(allPerms);
             }
 
             if (teacherRole.getPermissions().isEmpty()) teacherRole.setPermissions(new java.util.HashSet<>(java.util.List.of(
-                permissionRepository.findByCode("MENU_TEACHER_OVERVIEW").orElseThrow(),
-                permissionRepository.findByCode("MENU_TEACHER_COURSES").orElseThrow(),
-                permissionRepository.findByCode("MENU_TEACHER_GRADES").orElseThrow(),
-                permissionRepository.findByCode("MENU_TEACHER_STATS").orElseThrow(),
-                permissionRepository.findByCode("MENU_TEACHER_EXPORT").orElseThrow(),
-                apiCourseList, apiCourseCreate, apiCourseUpdate, apiCourseDelete,
-                apiGradeList, apiGradeCreate, apiGradeUpdate, apiGradeDelete, apiGradeStats, apiGradeExport,
-                apiEnrollList
+                    permissionRepository.findByCode("MENU_TEACHER_OVERVIEW").orElseThrow(),
+                    permissionRepository.findByCode("MENU_TEACHER_COURSES").orElseThrow(),
+                    permissionRepository.findByCode("MENU_TEACHER_GRADES").orElseThrow(),
+                    permissionRepository.findByCode("MENU_TEACHER_STATS").orElseThrow(),
+                    permissionRepository.findByCode("MENU_TEACHER_EXPORT").orElseThrow(),
+                    menuTeacherAppeal,
+                    apiCourseList, apiCourseCreate, apiCourseUpdate, apiCourseDelete,
+                    apiGradeList, apiGradeCreate, apiGradeUpdate, apiGradeDelete, apiGradeStats, apiGradeExport,
+                    apiEnrollList,
+                    apiAppealListPending, apiAppealClaim, apiAppealDecide, apiAppealDetail, apiAppealAuditLogs
             )));
 
             if (studentRole.getPermissions().isEmpty()) studentRole.setPermissions(new java.util.HashSet<>(java.util.List.of(
-                permissionRepository.findByCode("MENU_STUDENT_OVERVIEW").orElseThrow(),
-                permissionRepository.findByCode("MENU_STUDENT_COURSES").orElseThrow(),
-                permissionRepository.findByCode("MENU_STUDENT_GRADES").orElseThrow(),
-                permissionRepository.findByCode("MENU_STUDENT_PROFILE").orElseThrow(),
-                apiCourseList,
-                apiGradeList
+                    permissionRepository.findByCode("MENU_STUDENT_OVERVIEW").orElseThrow(),
+                    permissionRepository.findByCode("MENU_STUDENT_COURSES").orElseThrow(),
+                    permissionRepository.findByCode("MENU_STUDENT_GRADES").orElseThrow(),
+                    permissionRepository.findByCode("MENU_STUDENT_PROFILE").orElseThrow(),
+                    menuStudentAppeal,
+                    apiCourseList,
+                    apiGradeList,
+                    apiAppealCreate, apiAppealListMine, apiAppealRequestArbitrate, apiAppealDetail, apiAppealAuditLogs
             )));
 
             java.util.List<Role> rolesToSave = new java.util.ArrayList<>();
@@ -124,10 +145,8 @@ public class GradeApplication {
             if (legacyAdminRole != null) rolesToSave.add(legacyAdminRole);
             roleRepository.saveAll(rolesToSave);
 
-            // Init Users
             String pwd = passwordEncoder.encode("123456");
             ensureUserMerge(userRepository, "superadmin", "Super Admin", pwd, Set.of(superAdminRole));
-            // Backward-compat: keep "admin" account but make it SUPER_ADMIN as well.
             ensureUserMerge(userRepository, "admin", "Admin", pwd, Set.of(superAdminRole));
             ensureUser(userRepository, "teacher", "Teacher", pwd, Set.of(teacherRole));
             ensureUser(userRepository, "student", "Student", pwd, Set.of(studentRole));
